@@ -9,7 +9,7 @@ class RSACryptosystemApp:
     def __init__(self, root):
         self.root = root
         self.root.title("RSA Cryptosystem")
-
+        self.root.geometry("1120x550")
         # Khởi tạo biến lưu key
         self.public_key = None
         self.private_key = None
