@@ -14,16 +14,25 @@ class RSACryptosystemApp:
         self.public_key = None
         self.private_key = None
 
-        # Khung tạo key
+       # Khung tạo key
         key_frame = tk.LabelFrame(root, text="Tạo Key")
         key_frame.grid(row=0, column=0, padx=10, pady=10, sticky="ew")
 
-        tk.Label(key_frame, text="Độ dài Key:").grid(row=0, column=0)
+        # Row 0 for key length input
+        tk.Label(key_frame, text="Độ dài Key:").grid(row=0, column=0, padx=5, pady=5, sticky="w")
         self.key_length_var = tk.StringVar(value="1024")
-        tk.Entry(key_frame, textvariable=self.key_length_var, width=10).grid(row=0, column=1)
-        tk.Button(key_frame, text="Tạo Key Tự Động", command=self.generate_key).grid(row=0, column=2)
-        tk.Button(key_frame, text="Open Public Key", command=self.open_public_key).grid(row=1, column=1)
-        tk.Button(key_frame, text="Open Private Key", command=self.open_private_key).grid(row=1, column=2)
+        tk.Entry(key_frame, textvariable=self.key_length_var, width=10).grid(row=0, column=1, padx=5, pady=5)
+        tk.Button(key_frame, text="Tạo Key Tự Động", command=self.generate_key).grid(row=0, column=2, padx=5, pady=5)
+
+        # Row 1 for public/private key buttons
+        tk.Button(key_frame, text="Mở Public Key", command=self.open_public_key).grid(row=1, column=0, padx=5, pady=5, sticky="ew")
+        tk.Button(key_frame, text="Mở Private Key", command=self.open_private_key).grid(row=1, column=1, padx=5, pady=5, sticky="ew")
+
+        # Adjust column weights for dynamic resizing
+        key_frame.grid_columnconfigure(0, weight=1)
+        key_frame.grid_columnconfigure(1, weight=1)
+        key_frame.grid_columnconfigure(2, weight=1)
+
 
         # Khung thông tin key
         key_info_frame = tk.LabelFrame(root, text="Thông tin Key")
@@ -42,21 +51,21 @@ class RSACryptosystemApp:
         tk.Entry(key_info_frame, textvariable=self.private_exp_var, width=50).grid(row=2, column=1)
 
         # Khung mã hóa và giải mã
-        encrypt_frame = tk.LabelFrame(root, text="Mã Hóa và Giải Mã")
+        encrypt_frame = tk.LabelFrame(root, text="Mã hóa và Giải mã")
         encrypt_frame.grid(row=1, column=0, padx=10, pady=10, sticky="ew")
 
-        tk.Label(encrypt_frame, text="Input:").grid(row=0, column=0)
+        tk.Label(encrypt_frame, text="Đầu vào:").grid(row=0, column=0)
         self.input_file_var = tk.StringVar()
         tk.Entry(encrypt_frame, textvariable=self.input_file_var, width=50).grid(row=0, column=1)
-        tk.Button(encrypt_frame, text="Select File", command=self.select_input_file).grid(row=0, column=2)
+        tk.Button(encrypt_frame, text="Chọn file", command=self.select_input_file).grid(row=0, column=2)
 
-        tk.Label(encrypt_frame, text="Output:").grid(row=1, column=0)
+        tk.Label(encrypt_frame, text="Đầu ra:").grid(row=1, column=0)
         self.output_file_var = tk.StringVar()
         tk.Entry(encrypt_frame, textvariable=self.output_file_var, width=50).grid(row=1, column=1)
-        tk.Button(encrypt_frame, text="Select Folder", command=self.select_output_folder).grid(row=1, column=2)
+        tk.Button(encrypt_frame, text="Chọn thư mục", command=self.select_output_folder).grid(row=1, column=2)
 
-        tk.Button(encrypt_frame, text="Mã Hóa", command=self.encrypt_file).grid(row=2, column=1)
-        tk.Button(encrypt_frame, text="Giải Mã", command=self.decrypt_file).grid(row=2, column=2)
+        tk.Button(encrypt_frame, text="Mã hóa", command=self.encrypt_file).grid(row=2, column=1)
+        tk.Button(encrypt_frame, text="Giải mã", command=self.decrypt_file).grid(row=2, column=2)
 
 
         # Khung kiểm tra hash file
@@ -70,12 +79,12 @@ class RSACryptosystemApp:
         tk.Label(file_selection_frame, text="File gốc:").grid(row=0, column=0, sticky="w")
         self.file_to_hash1_var = tk.StringVar()
         tk.Entry(file_selection_frame, textvariable=self.file_to_hash1_var, width=50).grid(row=0, column=1, padx=5)
-        tk.Button(file_selection_frame, text="Open File gốc", command=self.select_file_to_hash1).grid(row=0, column=2, padx=5)
+        tk.Button(file_selection_frame, text="Mở File gốc", command=self.select_file_to_hash1).grid(row=0, column=2, padx=5)
 
         tk.Label(file_selection_frame, text="File đã giải mã:").grid(row=1, column=0, sticky="w")
         self.file_to_hash2_var = tk.StringVar()
         tk.Entry(file_selection_frame, textvariable=self.file_to_hash2_var, width=50).grid(row=1, column=1, padx=5)
-        tk.Button(file_selection_frame, text="Open File đã giải mã", command=self.select_file_to_hash2).grid(row=1, column=2, padx=5)
+        tk.Button(file_selection_frame, text="Mở File đã giải mã", command=self.select_file_to_hash2).grid(row=1, column=2, padx=5)
 
         # Nút kiểm tra
         check_button_frame = tk.Frame(hash_frame)
@@ -105,7 +114,7 @@ class RSACryptosystemApp:
         tk.Entry(hash_frame, textvariable=self.sha256_file2_var, width=40, state="readonly").grid(row=4, column=2, padx=5)
 
         # Kết quả so sánh
-        tk.Label(hash_frame, text="Kết Quả So Sánh:").grid(row=5, column=0, sticky="w", padx=10)
+        tk.Label(hash_frame, text="Kết quả so sánh:").grid(row=5, column=0, sticky="w", padx=10)
         self.compare_result_var = tk.StringVar()
         tk.Entry(hash_frame, textvariable=self.compare_result_var, width=80, state="readonly").grid(row=5, column=1, columnspan=2, padx=5)
 
@@ -252,7 +261,7 @@ class RSACryptosystemApp:
                 self.root.update_idletasks()
 
             encrypted_data = b''.join(encrypted_chunks)
-            encrypted_data_with_filename = original_filename.encode() + b'\0' + encrypted_data
+            encrypted_data_with_filename = original_filename.encode() + '_after_decrypted' + b'\0' + encrypted_data
 
             output_file = os.path.join(self.output_file_var.get(), "encrypted_file")
             with open(output_file, 'wb') as f:
