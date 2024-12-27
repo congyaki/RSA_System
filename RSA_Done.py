@@ -226,8 +226,11 @@ class RSACryptosystemApp:
             with open(input_file, 'rb') as f:
                 data = f.read()
 
+            # Lấy tên file gốc
+            original_filename = os.path.basename(input_file)
+
             # Tính toán kích thước tối đa của khối dựa trên module n của public_key
-            max_chunk_size = (self.public_key.n.bit_length() // 8) - 11  # Khối mã hóa tối đa
+            max_chunk_size = (self.public_key.n.bit_length() // 8) - 11
 
             encrypted_chunks = []
             # Chia dữ liệu thành các khối nhỏ hơn và mã hóa từng khối
@@ -239,9 +242,13 @@ class RSACryptosystemApp:
             # Ghép các khối mã hóa lại với nhau
             encrypted_data = b''.join(encrypted_chunks)
 
+            # Thêm tên file gốc vào dữ liệu mã hóa
+            encrypted_data_with_filename = original_filename.encode() + b'\0' + encrypted_data
+
+            # Ghi dữ liệu mã hóa ra file
             output_file = os.path.join(self.output_file_var.get(), "encrypted_file")
             with open(output_file, 'wb') as f:
-                f.write(encrypted_data)
+                f.write(encrypted_data_with_filename)
 
             messagebox.showinfo("Success", "File encrypted successfully!")
         except Exception as e:
@@ -255,7 +262,10 @@ class RSACryptosystemApp:
 
         try:
             with open(input_file, 'rb') as f:
-                encrypted_data = f.read()
+                encrypted_data_with_filename = f.read()
+
+            # Tách tên file gốc và dữ liệu mã hóa
+            original_filename, encrypted_data = encrypted_data_with_filename.split(b'\0', 1)
 
             # Tính toán kích thước tối đa của khối giải mã dựa trên module n của private_key
             max_chunk_size = (self.private_key.n.bit_length() // 8)
@@ -270,9 +280,8 @@ class RSACryptosystemApp:
             # Ghép các khối giải mã lại với nhau
             decrypted_data = b''.join(decrypted_chunks)
 
-            # Xác định tên file gốc từ tên file đã mã hóa (giả sử tệp gốc có tên là "encrypted_file")
-            output_file = os.path.join(self.output_file_var.get(), "decrypted_file")
-
+            # Sử dụng tên file gốc để lưu file giải mã
+            output_file = os.path.join(self.output_file_var.get(), original_filename.decode())
             with open(output_file, 'wb') as f:
                 f.write(decrypted_data)
 
