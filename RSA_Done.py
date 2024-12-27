@@ -4,12 +4,13 @@ import rsa
 import hashlib
 import os
 from tkinter.ttk import Progressbar
+import threading
 
 class RSACryptosystemApp:
     def __init__(self, root):
         self.root = root
         self.root.title("RSA Cryptosystem")
-        self.root.geometry("1120x550")
+        # self.root.geometry("1120x550")
         # Khởi tạo biến lưu key
         self.public_key = None
         self.private_key = None
@@ -76,15 +77,15 @@ class RSACryptosystemApp:
         file_selection_frame = tk.Frame(hash_frame)
         file_selection_frame.grid(row=0, column=0, columnspan=3, padx=10, pady=5)
 
-        tk.Label(file_selection_frame, text="File gốc:").grid(row=0, column=0, sticky="w")
+        tk.Label(file_selection_frame, text="File 1:").grid(row=0, column=0, sticky="w")
         self.file_to_hash1_var = tk.StringVar()
         tk.Entry(file_selection_frame, textvariable=self.file_to_hash1_var, width=50).grid(row=0, column=1, padx=5)
-        tk.Button(file_selection_frame, text="Mở File gốc", command=self.select_file_to_hash1).grid(row=0, column=2, padx=5)
+        tk.Button(file_selection_frame, text="Mở File 1", command=self.select_file_to_hash1).grid(row=0, column=2, padx=5)
 
-        tk.Label(file_selection_frame, text="File đã giải mã:").grid(row=1, column=0, sticky="w")
+        tk.Label(file_selection_frame, text="File 2:").grid(row=1, column=0, sticky="w")
         self.file_to_hash2_var = tk.StringVar()
         tk.Entry(file_selection_frame, textvariable=self.file_to_hash2_var, width=50).grid(row=1, column=1, padx=5)
-        tk.Button(file_selection_frame, text="Mở File đã giải mã", command=self.select_file_to_hash2).grid(row=1, column=2, padx=5)
+        tk.Button(file_selection_frame, text="Mở File 2", command=self.select_file_to_hash2).grid(row=1, column=2, padx=5)
 
         # Nút kiểm tra
         check_button_frame = tk.Frame(hash_frame)
@@ -183,7 +184,7 @@ class RSACryptosystemApp:
             # Cho phép người dùng chọn thư mục lưu key
             folder_path = filedialog.askdirectory()
             if not folder_path:
-                messagebox.showwarning("Warning", "No folder selected, keys will not be saved.")
+                messagebox.showwarning("Warning", "Không có thư mục nào được chọn, khóa sẽ không được lưu.")
                 return
 
             # Lưu public key
@@ -196,10 +197,10 @@ class RSACryptosystemApp:
             with open(private_key_path, 'wb') as priv_file:
                 priv_file.write(self.private_key.save_pkcs1('PEM'))
 
-            messagebox.showinfo("Success", f"RSA Key generated and saved successfully!\nPublic key: {public_key_path}\nPrivate key: {private_key_path}")
+            messagebox.showinfo("Success", f"Khóa RSA đã được tạo và lưu thành công !\nPublic key: {public_key_path}\nPrivate key: {private_key_path}")
 
         except ValueError:
-            messagebox.showerror("Error", "Invalid key length")
+            messagebox.showerror("Error", "Độ dài khóa không hợp lệ !")
 
     def open_public_key(self):
         file_path = filedialog.askopenfilename(filetypes=[("PEM files", "*.pem")])
@@ -209,9 +210,9 @@ class RSACryptosystemApp:
                     self.public_key = rsa.PublicKey.load_pkcs1(f.read(), format='PEM')
                 self.modulus_var.set(str(self.public_key.n))
                 self.public_exp_var.set(str(self.public_key.e))
-                messagebox.showinfo("Success", "Public key loaded successfully!")
+                messagebox.showinfo("Success", "Khóa công khai đã được tải thành công !")
             except Exception as e:
-                messagebox.showerror("Error", f"Failed to load public key: {str(e)}")
+                messagebox.showerror("Error", f"Không tải được khóa công khai: {str(e)}")
 
     def open_private_key(self):
         file_path = filedialog.askopenfilename(filetypes=[("PEM files", "*.pem")])
@@ -221,9 +222,9 @@ class RSACryptosystemApp:
                     self.private_key = rsa.PrivateKey.load_pkcs1(f.read(), format='PEM')
                 self.modulus_var.set(str(self.private_key.n))
                 self.private_exp_var.set(str(self.private_key.d))
-                messagebox.showinfo("Success", "Private key loaded successfully!")
+                messagebox.showinfo("Success", "Khóa riêng tư đã được tải thành công !")
             except Exception as e:
-                messagebox.showerror("Error", f"Failed to load private key: {str(e)}")
+                messagebox.showerror("Error", f"Không tải được khóa riêng tư: {str(e)}")
 
     def select_input_file(self):
         file_path = filedialog.askopenfilename()
@@ -234,82 +235,90 @@ class RSACryptosystemApp:
         self.output_file_var.set(folder_path)
 
     def encrypt_file(self):
-        input_file = self.input_file_var.get()
-        if not input_file or not os.path.exists(input_file):
-            messagebox.showerror("Error", "Invalid input file")
-            return
+        def worker():
+            input_file = self.input_file_var.get()
+            if not input_file or not os.path.exists(input_file):
+                messagebox.showerror("Error", "Tệp đầu vào không hợp lệ !")
+                return
 
-        try:
-            with open(input_file, 'rb') as f:
-                data = f.read()
+            try:
+                with open(input_file, 'rb') as f:
+                    data = f.read()
 
-            original_filename = os.path.basename(input_file)
-            max_chunk_size = (self.public_key.n.bit_length() // 8) - 11
-            encrypted_chunks = []
+                original_filename = os.path.basename(input_file)
+                max_chunk_size = (self.public_key.n.bit_length() // 8) - 11
+                encrypted_chunks = []
 
-            # Reset progress bar
-            self.progress_var.set(0)
-            total_chunks = len(data) // max_chunk_size + (1 if len(data) % max_chunk_size != 0 else 0)
+                # Reset progress bar
+                self.progress_var.set(0)
+                total_chunks = len(data) // max_chunk_size + (1 if len(data) % max_chunk_size != 0 else 0)
 
-            for i in range(0, len(data), max_chunk_size):
-                chunk = data[i:i + max_chunk_size]
-                encrypted_chunk = rsa.encrypt(chunk, self.public_key)
-                encrypted_chunks.append(encrypted_chunk)
+                for i in range(0, len(data), max_chunk_size):
+                    chunk = data[i:i + max_chunk_size]
+                    encrypted_chunk = rsa.encrypt(chunk, self.public_key)
+                    encrypted_chunks.append(encrypted_chunk)
 
-                # Cập nhật thanh tiến trình
-                self.progress_var.set((i // max_chunk_size + 1) / total_chunks * 100)
-                self.root.update_idletasks()
+                    # Cập nhật thanh tiến trình
+                    self.progress_var.set((i // max_chunk_size + 1) / total_chunks * 100)
+                    self.root.update_idletasks()
 
-            encrypted_data = b''.join(encrypted_chunks)
-            encrypted_data_with_filename = original_filename.encode() + '_after_decrypted' + b'\0' + encrypted_data
+                encrypted_data = b''.join(encrypted_chunks)
+                encrypted_data_with_filename = original_filename.encode() + b'\0' + encrypted_data
 
-            output_file = os.path.join(self.output_file_var.get(), "encrypted_file")
-            with open(output_file, 'wb') as f:
-                f.write(encrypted_data_with_filename)
+                output_file = os.path.join(self.output_file_var.get(), "encrypted_file")
+                with open(output_file, 'wb') as f:
+                    f.write(encrypted_data_with_filename)
 
-            messagebox.showinfo("Success", "File encrypted successfully!")
-        except Exception as e:
-            messagebox.showerror("Error", str(e))
-        finally:
-            self.progress_var.set(100)  # Đặt thanh tiến trình hoàn thành
+                messagebox.showinfo("Success", "Tập tin đã được mã hóa thành công !")
+            except Exception as e:
+                messagebox.showerror("Error", str(e))
+            finally:
+                self.progress_var.set(100)
+
+        # Tạo và chạy luồng riêng
+        threading.Thread(target=worker, daemon=True).start()
 
     def decrypt_file(self):
-        input_file = self.input_file_var.get()
-        if not input_file or not os.path.exists(input_file):
-            messagebox.showerror("Error", "Invalid input file")
-            return
+        def worker():
+            input_file = self.input_file_var.get()
+            if not input_file or not os.path.exists(input_file):
+                messagebox.showerror("Error", "Tệp đầu vào không hợp lệ !")
+                return
 
-        try:
-            with open(input_file, 'rb') as f:
-                encrypted_data_with_filename = f.read()
+            try:
+                with open(input_file, 'rb') as f:
+                    encrypted_data_with_filename = f.read()
 
-            original_filename, encrypted_data = encrypted_data_with_filename.split(b'\0', 1)
-            max_chunk_size = (self.private_key.n.bit_length() // 8)
-            decrypted_chunks = []
+                original_filename, encrypted_data = encrypted_data_with_filename.split(b'\0', 1)
+                max_chunk_size = (self.private_key.n.bit_length() // 8)
+                decrypted_chunks = []
 
-            # Reset progress bar
-            self.progress_var.set(0)
-            total_chunks = len(encrypted_data) // max_chunk_size + (1 if len(encrypted_data) % max_chunk_size != 0 else 0)
+                # Reset progress bar
+                self.progress_var.set(0)
+                total_chunks = len(encrypted_data) // max_chunk_size + (1 if len(encrypted_data) % max_chunk_size != 0 else 0)
 
-            for i in range(0, len(encrypted_data), max_chunk_size):
-                chunk = encrypted_data[i:i + max_chunk_size]
-                decrypted_chunk = rsa.decrypt(chunk, self.private_key)
-                decrypted_chunks.append(decrypted_chunk)
+                for i in range(0, len(encrypted_data), max_chunk_size):
+                    chunk = encrypted_data[i:i + max_chunk_size]
+                    decrypted_chunk = rsa.decrypt(chunk, self.private_key)
+                    decrypted_chunks.append(decrypted_chunk)
 
-                # Cập nhật thanh tiến trình
-                self.progress_var.set((i // max_chunk_size + 1) / total_chunks * 100)
-                self.root.update_idletasks()
+                    # Cập nhật thanh tiến trình
+                    self.progress_var.set((i // max_chunk_size + 1) / total_chunks * 100)
+                    self.root.update_idletasks()
 
-            decrypted_data = b''.join(decrypted_chunks)
-            output_file = os.path.join(self.output_file_var.get(), original_filename.decode())
-            with open(output_file, 'wb') as f:
-                f.write(decrypted_data)
+                decrypted_data = b''.join(decrypted_chunks)
+                output_file = os.path.join(self.output_file_var.get(), original_filename.decode())
+                with open(output_file, 'wb') as f:
+                    f.write(decrypted_data)
 
-            messagebox.showinfo("Success", f"File decrypted successfully!\nSaved as {output_file}")
-        except Exception as e:
-            messagebox.showerror("Error", str(e))
-        finally:
-            self.progress_var.set(100)  # Đặt thanh tiến trình hoàn thành
+                messagebox.showinfo("Success", f"Tập tin đã được giải mã thành công !\nĐược lưu ở {output_file}")
+            except Exception as e:
+                messagebox.showerror("Error", str(e))
+            finally:
+                self.progress_var.set(100)  # Đặt thanh tiến trình hoàn thành
+            
+        # Tạo và chạy luồng riêng
+        threading.Thread(target=worker, daemon=True).start()
 
     def select_file_to_hash(self):
         file_path = filedialog.askopenfilename()
