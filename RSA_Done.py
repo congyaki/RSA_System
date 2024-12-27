@@ -3,6 +3,7 @@ from tkinter import filedialog, messagebox
 import rsa
 import hashlib
 import os
+from tkinter.ttk import Progressbar
 
 class RSACryptosystemApp:
     def __init__(self, root):
@@ -60,52 +61,59 @@ class RSACryptosystemApp:
 
         # Khung kiểm tra hash file
         hash_frame = tk.LabelFrame(root, text="Kiểm Tra File")
-        hash_frame.grid(row=1, column=1, padx=10, pady=10, sticky="ew")
+        hash_frame.grid(row=1, column=1, padx=10, pady=10, sticky="nsew")
 
-        # Chọn file 1
-        tk.Label(hash_frame, text="File gốc:").grid(row=0, column=0)
+        # Chọn file 1 và file 2
+        file_selection_frame = tk.Frame(hash_frame)
+        file_selection_frame.grid(row=0, column=0, columnspan=3, padx=10, pady=5)
+
+        tk.Label(file_selection_frame, text="File gốc:").grid(row=0, column=0, sticky="w")
         self.file_to_hash1_var = tk.StringVar()
-        tk.Entry(hash_frame, textvariable=self.file_to_hash1_var, width=50).grid(row=0, column=1)
-        tk.Button(hash_frame, text="Open File gốc", command=self.select_file_to_hash1).grid(row=0, column=2)
+        tk.Entry(file_selection_frame, textvariable=self.file_to_hash1_var, width=50).grid(row=0, column=1, padx=5)
+        tk.Button(file_selection_frame, text="Open File gốc", command=self.select_file_to_hash1).grid(row=0, column=2, padx=5)
 
-        # Chọn file 2
-        tk.Label(hash_frame, text="File đã giải mã:").grid(row=1, column=0)
+        tk.Label(file_selection_frame, text="File đã giải mã:").grid(row=1, column=0, sticky="w")
         self.file_to_hash2_var = tk.StringVar()
-        tk.Entry(hash_frame, textvariable=self.file_to_hash2_var, width=50).grid(row=1, column=1)
-        tk.Button(hash_frame, text="Open File đã giải mã", command=self.select_file_to_hash2).grid(row=1, column=2)
+        tk.Entry(file_selection_frame, textvariable=self.file_to_hash2_var, width=50).grid(row=1, column=1, padx=5)
+        tk.Button(file_selection_frame, text="Open File đã giải mã", command=self.select_file_to_hash2).grid(row=1, column=2, padx=5)
 
         # Nút kiểm tra
-        tk.Button(hash_frame, text="Kiểm Tra", command=self.compute_hash).grid(row=2, column=1, columnspan=2)
+        check_button_frame = tk.Frame(hash_frame)
+        check_button_frame.grid(row=1, column=0, columnspan=3, pady=5)
 
-        # Tiêu đề cột cho "File gốc" và "File đã giải mã"
-        tk.Label(hash_frame, text="File gốc").grid(row=3, column=1)
-        tk.Label(hash_frame, text="File đã giải mã").grid(row=3, column=2)
+        tk.Button(check_button_frame, text="Kiểm Tra", command=self.compute_hash, width=20).pack(pady=5)
 
         # Hiển thị kết quả hash file
-        tk.Label(hash_frame, text="MD5:").grid(row=4, column=0)
-        tk.Label(hash_frame, text="SHA-1:").grid(row=5, column=0)
-        tk.Label(hash_frame, text="SHA-256:").grid(row=6, column=0)
+        tk.Label(hash_frame, text="MD5:", anchor="w").grid(row=2, column=0, sticky="w", padx=10)
+        tk.Label(hash_frame, text="SHA-1:", anchor="w").grid(row=3, column=0, sticky="w", padx=10)
+        tk.Label(hash_frame, text="SHA-256:", anchor="w").grid(row=4, column=0, sticky="w", padx=10)
 
-        # Hiển thị kết quả hash file 1
+        # Kết quả hash file 1
         self.md5_file1_var = tk.StringVar()
-        tk.Entry(hash_frame, textvariable=self.md5_file1_var, width=50, state="readonly").grid(row=4, column=1)
+        tk.Entry(hash_frame, textvariable=self.md5_file1_var, width=40, state="readonly").grid(row=2, column=1, padx=5)
         self.sha1_file1_var = tk.StringVar()
-        tk.Entry(hash_frame, textvariable=self.sha1_file1_var, width=50, state="readonly").grid(row=5, column=1)
+        tk.Entry(hash_frame, textvariable=self.sha1_file1_var, width=40, state="readonly").grid(row=3, column=1, padx=5)
         self.sha256_file1_var = tk.StringVar()
-        tk.Entry(hash_frame, textvariable=self.sha256_file1_var, width=50, state="readonly").grid(row=6, column=1)
+        tk.Entry(hash_frame, textvariable=self.sha256_file1_var, width=40, state="readonly").grid(row=4, column=1, padx=5)
 
-        # Hiển thị kết quả hash file 2
+        # Kết quả hash file 2
         self.md5_file2_var = tk.StringVar()
-        tk.Entry(hash_frame, textvariable=self.md5_file2_var, width=50, state="readonly").grid(row=4, column=2)
+        tk.Entry(hash_frame, textvariable=self.md5_file2_var, width=40, state="readonly").grid(row=2, column=2, padx=5)
         self.sha1_file2_var = tk.StringVar()
-        tk.Entry(hash_frame, textvariable=self.sha1_file2_var, width=50, state="readonly").grid(row=5, column=2)
+        tk.Entry(hash_frame, textvariable=self.sha1_file2_var, width=40, state="readonly").grid(row=3, column=2, padx=5)
         self.sha256_file2_var = tk.StringVar()
-        tk.Entry(hash_frame, textvariable=self.sha256_file2_var, width=50, state="readonly").grid(row=6, column=2)
+        tk.Entry(hash_frame, textvariable=self.sha256_file2_var, width=40, state="readonly").grid(row=4, column=2, padx=5)
 
-        # Hiển thị kết quả so sánh
-        tk.Label(hash_frame, text="Kết Quả So Sánh:").grid(row=7, column=0)
+        # Kết quả so sánh
+        tk.Label(hash_frame, text="Kết Quả So Sánh:").grid(row=5, column=0, sticky="w", padx=10)
         self.compare_result_var = tk.StringVar()
-        tk.Entry(hash_frame, textvariable=self.compare_result_var, width=50, state="readonly").grid(row=7, column=1, columnspan=2)
+        tk.Entry(hash_frame, textvariable=self.compare_result_var, width=80, state="readonly").grid(row=5, column=1, columnspan=2, padx=5)
+
+
+        # Thêm thanh tiến trình vào khung mã hóa và giải mã
+        self.progress_var = tk.DoubleVar()
+        self.progress_bar = Progressbar(encrypt_frame, variable=self.progress_var, maximum=100, length=200)
+        self.progress_bar.grid(row=3, column=1, columnspan=2, pady=10)
 
 
     def select_file_to_hash1(self):
@@ -226,26 +234,26 @@ class RSACryptosystemApp:
             with open(input_file, 'rb') as f:
                 data = f.read()
 
-            # Lấy tên file gốc
             original_filename = os.path.basename(input_file)
-
-            # Tính toán kích thước tối đa của khối dựa trên module n của public_key
             max_chunk_size = (self.public_key.n.bit_length() // 8) - 11
-
             encrypted_chunks = []
-            # Chia dữ liệu thành các khối nhỏ hơn và mã hóa từng khối
+
+            # Reset progress bar
+            self.progress_var.set(0)
+            total_chunks = len(data) // max_chunk_size + (1 if len(data) % max_chunk_size != 0 else 0)
+
             for i in range(0, len(data), max_chunk_size):
                 chunk = data[i:i + max_chunk_size]
                 encrypted_chunk = rsa.encrypt(chunk, self.public_key)
                 encrypted_chunks.append(encrypted_chunk)
 
-            # Ghép các khối mã hóa lại với nhau
-            encrypted_data = b''.join(encrypted_chunks)
+                # Cập nhật thanh tiến trình
+                self.progress_var.set((i // max_chunk_size + 1) / total_chunks * 100)
+                self.root.update_idletasks()
 
-            # Thêm tên file gốc vào dữ liệu mã hóa
+            encrypted_data = b''.join(encrypted_chunks)
             encrypted_data_with_filename = original_filename.encode() + b'\0' + encrypted_data
 
-            # Ghi dữ liệu mã hóa ra file
             output_file = os.path.join(self.output_file_var.get(), "encrypted_file")
             with open(output_file, 'wb') as f:
                 f.write(encrypted_data_with_filename)
@@ -253,6 +261,8 @@ class RSACryptosystemApp:
             messagebox.showinfo("Success", "File encrypted successfully!")
         except Exception as e:
             messagebox.showerror("Error", str(e))
+        finally:
+            self.progress_var.set(100)  # Đặt thanh tiến trình hoàn thành
 
     def decrypt_file(self):
         input_file = self.input_file_var.get()
@@ -264,23 +274,24 @@ class RSACryptosystemApp:
             with open(input_file, 'rb') as f:
                 encrypted_data_with_filename = f.read()
 
-            # Tách tên file gốc và dữ liệu mã hóa
             original_filename, encrypted_data = encrypted_data_with_filename.split(b'\0', 1)
-
-            # Tính toán kích thước tối đa của khối giải mã dựa trên module n của private_key
             max_chunk_size = (self.private_key.n.bit_length() // 8)
-
             decrypted_chunks = []
-            # Chia dữ liệu thành các khối và giải mã từng khối
+
+            # Reset progress bar
+            self.progress_var.set(0)
+            total_chunks = len(encrypted_data) // max_chunk_size + (1 if len(encrypted_data) % max_chunk_size != 0 else 0)
+
             for i in range(0, len(encrypted_data), max_chunk_size):
                 chunk = encrypted_data[i:i + max_chunk_size]
                 decrypted_chunk = rsa.decrypt(chunk, self.private_key)
                 decrypted_chunks.append(decrypted_chunk)
 
-            # Ghép các khối giải mã lại với nhau
-            decrypted_data = b''.join(decrypted_chunks)
+                # Cập nhật thanh tiến trình
+                self.progress_var.set((i // max_chunk_size + 1) / total_chunks * 100)
+                self.root.update_idletasks()
 
-            # Sử dụng tên file gốc để lưu file giải mã
+            decrypted_data = b''.join(decrypted_chunks)
             output_file = os.path.join(self.output_file_var.get(), original_filename.decode())
             with open(output_file, 'wb') as f:
                 f.write(decrypted_data)
@@ -288,6 +299,8 @@ class RSACryptosystemApp:
             messagebox.showinfo("Success", f"File decrypted successfully!\nSaved as {output_file}")
         except Exception as e:
             messagebox.showerror("Error", str(e))
+        finally:
+            self.progress_var.set(100)  # Đặt thanh tiến trình hoàn thành
 
     def select_file_to_hash(self):
         file_path = filedialog.askopenfilename()
