@@ -307,7 +307,10 @@ class RSACryptosystemApp:
                     self.root.update_idletasks()
 
                 decrypted_data = b''.join(decrypted_chunks)
-                output_file = os.path.join(self.output_file_var.get(), original_filename.decode())
+                original_filename_str = original_filename.decode()
+                filename, ext = os.path.splitext(original_filename_str)
+                output_file = os.path.join(self.output_file_var.get(), f"{filename}_after_decrypt{ext}")
+
                 with open(output_file, 'wb') as f:
                     f.write(decrypted_data)
 
